@@ -3,10 +3,16 @@ PROD = main
 
 .PHONY: clean
 
-all: $(PROD) test.out
-
-$(PROD): main.c elf_loader.c
+$(PROD): main.tmp elf_loader.c
 	$(CC) $(CFLAGS) $+ -o $@
+	rm $<
+
+main.tmp: main.o test.out
+	objcopy --add-section=elf_exec=test.out \
+		--set-section-flags=elf_exec=contents,alloc,load,code $< $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $< -c -o $@
 
 test.out: test.c
 	$(CC) $(CFLAGS) -nostartfiles -fPIE -pie -static $+ -o $@
