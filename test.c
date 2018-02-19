@@ -1,4 +1,5 @@
-int _pow(int x, int n) {
+int _pow(int x, int n)
+{
     return n < 2 ? x : x * _pow(x, n - 1);
 }
 

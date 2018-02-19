@@ -1,14 +1,15 @@
 CFLAGS = -Wall -Wextra -Wconversion -O0 -ggdb
+PROD = main
 
-.PHONY: all clean
+.PHONY: clean
 
-all: elf_loader.out test.out
+all: $(PROD) test.out
 
-elf_loader.out: main.c elf_loader.c
+$(PROD): main.c elf_loader.c
 	$(CC) $(CFLAGS) $+ -o $@
 
 test.out: test.c
-	$(CC) $(CFLAGS) -nostartfiles -fPIC -static $+ -o $@
+	$(CC) $(CFLAGS) -nostartfiles -fPIE -pie -static $+ -o $@
 
 clean:
-	rm -f *.out
+	rm -f $(PROD) *.out *.o
