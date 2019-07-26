@@ -5,5 +5,5 @@ int _pow(int x, int n)
 
 int _start(void)
 {
-    return _pow(2, 3);
+    return _pow(3, 5);
 }

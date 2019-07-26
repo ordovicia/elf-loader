@@ -1,4 +1,4 @@
-ELF Loader
+ELF loader
 ==========
 
 Load statically linked ELF file.
@@ -7,5 +7,5 @@ Load statically linked ELF file.
 
 ```shell
 $ make
-$ ./elf_loader.out test.out
+$ ./main test.out
 ```

@@ -7,19 +7,24 @@
 
 #include "elf_loader.h"
 
-#define LIBC_FAIL(msg)      \
-    do {                    \
-        perror(#msg);       \
-        exit(EXIT_FAILURE); \
-    } while (0);
-
 #define FAIL(msg)           \
     do {                    \
         fputs(msg, stderr); \
         exit(EXIT_FAILURE); \
     } while (0);
 
-const void* get_mmap_ptr(const char* file_name);
+#define FAIL_LIBC(msg)      \
+    do {                    \
+        perror(#msg);       \
+        exit(EXIT_FAILURE); \
+    } while (0);
+
+typedef struct {
+    void* ptr;
+    size_t size;
+} MMap;
+
+MMap mmap_path(const char* path);
 
 int main(int argc, char** argv)
 {
@@ -28,32 +33,47 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const void* elf_ptr = get_mmap_ptr(argv[1]);
+    MMap elf_mmap = mmap_path(argv[1]);
 
     Elf64Exec elf64_exec;
-    if (parse_elf64(elf_ptr, &elf64_exec) == -1)
+    if (elf64_parse(elf_mmap.ptr, &elf64_exec) == -1) {
         FAIL("Failed to parse file\n");
+    }
 
-    if (load_elf64(&elf64_exec) == -1)
+    int retval;
+    if (elf64_load(&elf64_exec, &retval) == -1) {
         FAIL("Failed to load ELF\n");
+    }
+
+    puts("");
+    printf("Execution succeeded. Return value: %d\n", retval);
+
+    if (munmap(elf_mmap.ptr, elf_mmap.size) == -1) {
+        FAIL_LIBC(munmap);
+    }
 
     return 0;
 }
 
-const void* get_mmap_ptr(const char* file_name)
+MMap mmap_path(const char* path)
 {
-    int fd = open(file_name, O_RDONLY);
-    if (fd == -1)
-        LIBC_FAIL(open);
+    int fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        FAIL_LIBC(open);
+    }
 
     struct stat sb;
-    if (fstat(fd, &sb) == -1)
-        LIBC_FAIL(fstat);
-    size_t file_size = (size_t)sb.st_size;
+    if (fstat(fd, &sb) == -1) {
+        FAIL_LIBC(fstat);
+    }
 
-    const void* elf_ptr = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (elf_ptr == MAP_FAILED)
-        LIBC_FAIL(mmap);
+    MMap result;
+    result.size = (size_t)sb.st_size;
 
-    return elf_ptr;
+    result.ptr = mmap(NULL, result.size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (result.ptr == MAP_FAILED) {
+        FAIL_LIBC(mmap);
+    }
+
+    return result;
 }

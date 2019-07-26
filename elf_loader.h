@@ -9,5 +9,11 @@ typedef struct {
     Elf64_Xword align;
 } Elf64Exec;
 
-int parse_elf64(const void* elf_ptr, Elf64Exec* elf64_exec);
-int load_elf64(const Elf64Exec* elf64_exec);
+// Parses mmap'ed ELF file into Elf64Exec and prints the header information.
+// Returns 0 on success, -1 on failure.
+int elf64_parse(const void* elf_ptr, Elf64Exec* elf64_exec);
+
+// Loads and executes given ELF executable.
+// Stores the return value of the executable in retval.
+// Returns 0 on success, -1 on failure.
+int elf64_load(const Elf64Exec* elf64_exec, int* retval);
